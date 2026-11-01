@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy Birthday Mini Quest!</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1e1e2f, #2a2a40);
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            animation: fadeIn 0.5s ease-in-out forwards;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            color: #ff79c6;
+            margin-bottom: 10px;
+        }
+
+        p {
+            font-size: 1rem;
+            line-height: 1.5;
+            color: #f8f8f2;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #ff79c6, #bd93f9);
+            color: #fff;
+            border: none;
+            padding: 12px 24px;
+            font-size: 1rem;
+            font-weight: bold;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 15px rgba(255, 121, 198, 0.4);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 121, 198, 0.6);
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+        }
+
+        /* Stage 1: Present Box */
+        .gift-box {
+            font-size: 80px;
+            cursor: pointer;
+            transition: transform 0.3s;
+            user-select: none;
+        }
+
+        .gift-box:hover {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        /* Stage 2: Click Game */
+        .progress-bar-container {
+            width: 100%;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #ff5555, #ffb86c, #50fa7b);
+            transition: width 0.2s;
+        }
+
+        /* Stage 3: Riddle Game */
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .opt-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            padding: 12px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .opt-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Stage 4: Candle Blower */
+        .cake {
+            font-size: 90px;
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+        }
+
+        /* Final Card */
+        .wishes {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            border-radius: 15px;
+            border-left: 4px solid #ff79c6;
+            text-align: left;
+            font-style: italic;
+        }
+
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <canvas id="confetti"></canvas>
+
+        <!-- START SCREEN -->
+        <div class="screen active" id="screen-start">
+            <h1> Apain Dulu Biar ga apa kali</h1>
+            <p>Selesaiin ini nanti dapet sesuatu </p>
+            <button class="btn" onclick="nextScreen('screen-stage1')">Mulai</button>
+        </div>
+
+        <!-- STAGE 1: Buka Kado -->
+        <div class="screen" id="screen-stage1">
+            <h1>Level 1: Ketuk Hadiah</h1>
+            <p>Ketuk kado di bawah ini untuk membukanya</p>
+            <div class="gift-box" onclick="nextScreen('screen-stage2')">🎁</div>
+        </div>
+
+        <!-- STAGE 2: isi Energi (Spam Click) -->
+        <div class="screen" id="screen-stage2">
+            <h1>Level 2: Pompa Kebahagiaan</h1>
+            <p>Klik tombol secepat mungkin untuk memenuhi indikator energi</p>
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="energy-bar"></div>
+            </div>
+            <button class="btn" onclick="chargeEnergy()">TEKAN! 🚀</button>
+        </div>
+
+        <!-- STAGE 3: Kuis Ringan -->
+        <div class="screen" id="screen-stage3">
+            <h1>Level 3: Pertanyaan Penting</h1>
+            <p>Hari ini hari apa?</p>
+            <div class="options">
+                <button class="opt-btn" onclick="wrongAnswer(this)">Ntah</button>
+                <button class="opt-btn" onclick="nextScreen('screen-stage4')">hari ulang ultah tahun gweh</button>
+                <button class="opt-btn" onclick="wrongAnswer(this)">Senin</button>
+            </div>
+        </div>
+
+        <!-- STAGE 4: Tiup Lilin -->
+        <div class="screen" id="screen-stage4">
+            <h1>Level Akhir: Tiup Lilinnya</h1>
+            <p>Klik kue untuk meniup lilin</p>
+            <div class="cake" id="cake-icon" onclick="finishGame()">🎂</div>
+        </div>
+
+        <!-- FINAL SCREEN -->
+        <div class="screen" id="screen-final">
+            <h1>🎉 Selamat Ulang Tahun! 🎉</h1>
+            <div class="wishes">
+                <p>"When i first thought, i didn't think we would get this far. until the years pass and the age of the person behind the screen increases. sebenarnya aku gabisa merangkai kata kata, jadi aku tulis aja yang ada di pikiran ku. kalo kau pening bacanya karena kepanjangan.. hm.. ntahlah. aku cuman bisa bilang semoga impian mu bakal terwujud di tahun ini dan tahun yang akan datang. semoga juga hal hal baik selalu datang kepadamu, jangan terusan overthinking! i know u have 2 side or many side, but ovt too much will kill you! dan juga stay jadi orang baik (walaupun menurut mu sendiri, kau itu jahat, then try be a good person) well hbd met ultah ulang tahun yah, entah kau suka atau nggak, aku gatau. tapi kalau kau cuman read, balas pake emote, reaction, dan balas pake stiker, cukup tau aja. soalnya aku buat ini pake coding an dan belajar otodidak pake AI hehe. pepatah mengatakan, gunakan lah AI sebaik mungkin, jangan buat untuk brainrot doang xixi. well gitu aja, terus aku juga mau bilang, jangan lupa cukur kumis yaa my loml :3"</p>
+            </div>
+            <button class="btn" onclick="location.reload()">Main Lagi 🔄</button>
+        </div>
+    </div>
+
+    <script>
+        function nextScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        let energy = 0;
+        function chargeEnergy() {
+            energy += 15;
+            if (energy > 100) energy = 100;
+            document.getElementById('energy-bar').style.width = energy + '%';
+            if (energy >= 100) {
+                setTimeout(() => nextScreen('screen-stage3'), 300);
+            }
+        }
+
+        function wrongAnswer(btn) {
+            btn.style.background = 'rgba(255, 85, 85, 0.4)';
+            btn.innerText = 'Coba Lagi! ❌';
+        }
+
+        function finishGame() {
+            document.getElementById('cake-icon').innerText = '🍰';
+            startConfetti();
+            setTimeout(() => nextScreen('screen-final'), 500);
+        }
+
+        // Simple Confetti Animation
+        function startConfetti() {
+            const canvas = document.getElementById('confetti');
+            const ctx = canvas.getContext('2d');
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
+
+            const pieces = [];
+            const colors = ['#ff79c6', '#bd93f9', '#50fa7b', '#ffb86c', '#8be9fd'];
+
+            for (let i = 0; i < 80; i++) {
+                pieces.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height - canvas.height,
+                    size: Math.random() * 8 + 4,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    speed: Math.random() * 3 + 2,
+                    rotation: Math.random() * 360
+                });
+            }
+
+            function update() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                pieces.forEach(p => {
+                    p.y += p.speed;
+                    p.rotation += 2;
+                    if (p.y > canvas.height) p.y = -10;
+
+                    ctx.save();
+                    ctx.translate(p.x, p.y);
+                    ctx.rotate((p.rotation * Math.PI) / 180);
+                    ctx.fillStyle = p.color;
+                    ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+                    ctx.restore();
+                });
+                requestAnimationFrame(update);
+            }
+            update();
+        }
+    </script>
+</body>
+</html>
